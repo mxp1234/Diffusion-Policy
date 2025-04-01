@@ -179,7 +179,32 @@ class RealPushTImageDataset(BaseImageDataset):
 
     def __len__(self):
         return len(self.sampler)
+    # def __getitem__(self, idx: int) -> Dict[str, torch.Tensor]:
+    #     threadpool_limits(1)
+    #     data = self.sampler.sample_sequence(idx)
 
+    #     T_slice = slice(self.n_obs_steps)
+    #     obs_dict = dict()
+    #     for key in self.rgb_keys:
+    #         # 从 Zarr 中获取的图像数据，形状为 (T, C, H, W)
+    #         img = data[key][T_slice]  # 例如 (2, 3, 240, 320)
+    #         # 转换为 torch.Tensor，确保类型一致
+    #         img_tensor = torch.from_numpy(img).to(dtype=torch.float32) / 255.0
+    #         obs_dict[key] = img_tensor
+    #         del data[key]
+    #     for key in self.lowdim_keys:
+    #         obs_dict[key] = data[key][T_slice].astype(np.float32)
+    #         del data[key]
+        
+    #     action = data['action'].astype(np.float32)
+    #     if self.n_latency_steps > 0:
+    #         action = action[self.n_latency_steps:]
+
+    #     torch_data = {
+    #         'obs': dict_apply(obs_dict, torch.from_numpy),
+    #         'action': torch.from_numpy(action)
+    #     }
+    #     return torch_data
     def __getitem__(self, idx: int) -> Dict[str, torch.Tensor]:
         threadpool_limits(1)
         data = self.sampler.sample_sequence(idx)

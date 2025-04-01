@@ -12,6 +12,7 @@ import hashlib
 from filelock import FileLock
 from threadpoolctl import threadpool_limits
 import concurrent.futures
+
 import multiprocessing
 from omegaconf import OmegaConf
 from diffusion_policy.common.pytorch_util import dict_apply
@@ -175,6 +176,10 @@ class RobomimicReplayImageDataset(BaseImageDataset):
                 this_normalizer = get_identity_normalizer_from_stat(stat)
             elif key.endswith('qpos'):
                 this_normalizer = get_range_normalizer_from_stat(stat)
+            elif key.endswith('positions'):
+                this_normalizer = get_range_normalizer_from_stat(stat)
+            elif key.endswith('state'):
+                this_normalizer = get_range_normalizer_from_stat(stat)
             else:
                 raise RuntimeError('unsupported')
             normalizer[key] = this_normalizer
@@ -241,7 +246,6 @@ def _convert_actions(raw_actions, abs_action, rotation_transformer):
             raw_actions = raw_actions.reshape(-1,20)
         actions = raw_actions
     return actions
-
 
 def _convert_robomimic_to_replay(store, shape_meta, dataset_path, abs_action, rotation_transformer, 
         n_workers=None, max_inflight_tasks=None):
@@ -313,11 +317,14 @@ def _convert_robomimic_to_replay(store, shape_meta, dataset_path, abs_action, ro
         
         def img_copy(zarr_arr, zarr_idx, hdf5_arr, hdf5_idx):
             try:
-                zarr_arr[zarr_idx] = hdf5_arr[hdf5_idx]
+                img = hdf5_arr[hdf5_idx]
                 # make sure we can successfully decode
+                img = np.transpose(img, (1, 2, 0))
+                zarr_arr[zarr_idx] = img
                 _ = zarr_arr[zarr_idx]
                 return True
             except Exception as e:
+                print(f"Failed at zarr_idx={zarr_idx}: {str(e)}")
                 return False
         
         with tqdm(total=n_steps*len(rgb_keys), desc="Loading image data", mininterval=1.0) as pbar:

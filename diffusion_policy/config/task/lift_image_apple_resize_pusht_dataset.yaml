@@ -1,0 +1,72 @@
+name: real_image
+
+# image_shape: [3, 1071, 1907]
+image_shape: [3, 240, 320]
+
+shape_meta: &shape_meta
+  # acceptable types: rgb, low_dim
+  obs:
+    # camera_0:
+    #   shape: ${task.image_shape}
+    #   type: rgb
+    image_1:
+      shape: ${task.image_shape}
+      type: rgb
+    # camera_2:
+    #   shape: ${task.image_shape}
+    #   type: rgb
+    image_2:
+      shape: ${task.image_shape}
+      type: rgb
+    # camera_4:
+    #   shape: ${task.image_shape}
+    #   type: rgb
+    joint_positions_dummy:
+      shape: [19]
+      type: low_dim
+    plastic_apple_position: 
+      shape: [3]
+      type: low_dim
+  action: 
+    shape: [22]
+
+task_name: &task_name lift
+dataset_type: &dataset_type ph
+# dataset_path: &dataset_path /root/code/diffusion_policy/data/real/bc_data_il/gello_all_dummy.h5
+# dataset_path: &dataset_path /root/code/diffusion_policy/data/real/bc_data_il
+dataset_path: &dataset_path /root/code/diffusion_policy/data/real/bc_data_il/gello_all_apple.zarr
+# dataset_path: &dataset_path /root/code/diffusion_policy/data/real/bc_data_il/gello.h5
+abs_action: &abs_action False
+
+env_runner:
+  _target_: diffusion_policy.env_runner.real_pusht_image_runner.RealPushTImageRunner
+  
+dataset:
+  _target_: diffusion_policy.dataset.real_pusht_image_dataset_except_video.RealPushTImageDataset
+  shape_meta: *shape_meta
+  dataset_path: ${task.dataset_path}
+  horizon: ${horizon}
+  pad_before: ${eval:'${n_obs_steps}-1+${n_latency_steps}'}
+  pad_after: ${eval:'${n_action_steps}-1'}
+  n_obs_steps: ${dataset_obs_steps}
+  n_latency_steps: ${n_latency_steps}
+  use_cache: False
+  seed: 42
+  val_ratio: 0.00
+  max_train_episodes: null
+  delta_action: False
+# dataset:
+#   _target_: diffusion_policy.dataset.robomimic_replay_image_dataset.RobomimicReplayImageDataset
+#   shape_meta: *shape_meta
+#   dataset_path: *dataset_path
+#   horizon: ${horizon}
+#   pad_before: ${eval:'${n_obs_steps}-1+${n_latency_steps}'}
+#   pad_after: ${eval:'${n_action_steps}-1'}
+#   n_obs_steps: ${dataset_obs_steps}
+#   abs_action: *abs_action
+#   rotation_rep: 'rotation_6d'
+#   use_legacy_normalizer: False
+#   use_cache: False
+#   seed: 42
+#   val_ratio: 0.02
+
